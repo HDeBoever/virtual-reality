@@ -1,6 +1,5 @@
 """
 An experimentation script to detect objects in real time using the webcam.
-
 An excersise in the usage of tensor flow, and more advanced python libraries.
 
 2018/08/10
@@ -9,13 +8,10 @@ author: @Henri De Boever
 "Speed/accuracy trade-offs for modern convolutional object detectors."
 Huang J, Rathod V, Sun C, Zhu M, Korattikara A, Fathi A, Fischer I, Wojna Z,
 Song Y, Guadarrama S, Murphy K, CVPR 2017
-
 """
 
-
-import os, cv2, time, argparse, multiprocessing
+import os, cv2, time, argparse, multiprocessing, sys
 import numpy as np, tensorflow as tf
-
 from utils.app_utils import FPS, WebcamVideoStream
 from multiprocessing import Queue, Pool
 from object_detection.utils import label_map_util
@@ -37,10 +33,9 @@ label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes = NUM_CLASSES, use_display_name = True)
 category_index = label_map_util.create_category_index(categories)
 
-
 def detect_objects(image_np, sess, detection_graph):
 	# Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-	image_np_expanded = np.expand_dims(image_np, axis=0)
+	image_np_expanded = np.expand_dims(image_np, axis = 0)
 	image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
 
 	# Each box represents a part of the image where a particular object was detected.
@@ -52,7 +47,7 @@ def detect_objects(image_np, sess, detection_graph):
 	classes = detection_graph.get_tensor_by_name('detection_classes:0')
 	num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-	# Actual detection.
+	# Actual detection
 	(boxes, scores, classes, num_detections) = sess.run([boxes, scores, classes, num_detections], feed_dict = {image_tensor: image_np_expanded})
 
 	# Visualization of the results of a detection.
@@ -64,6 +59,18 @@ def detect_objects(image_np, sess, detection_graph):
 		category_index,
 		use_normalized_coordinates = True,
 		line_thickness = 5)
+
+	#print(category_index)
+	print(np.squeeze(classes).astype(np.int32)[0])
+
+	# Get the indices of the top 3 things being tracked
+	object_index1 = np.squeeze(classes).astype(np.int32)[0]
+	object_index2 = np.squeeze(classes).astype(np.int32)[1]
+	object_index3 = np.squeeze(classes).astype(np.int32)[2]
+
+	for key, item in category_index.items():
+		if(key == object_index1 or key == object_index2 or key == object_index3):
+			print(key, item['name'])
 	return image_np
 
 def worker(input_q, output_q):
@@ -83,23 +90,25 @@ def worker(input_q, output_q):
 		fps.update()
 		frame = input_q.get()
 		frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		print(dir(detection_graph))
+		print(detection_graph.get_tensor_by_name)
 		output_q.put(detect_objects(frame_rgb, sess, detection_graph))
 
 	fps.stop()
 	sess.close()
 
 if __name__ == '__main__':
+
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-src', '--source', dest='video_source', type=int, default = 0, help='Device index of the camera.')
-	parser.add_argument('-wd', '--width', dest='width', type=int, default = 640, help='Width of the frames in the video stream.')
-	parser.add_argument('-ht', '--height', dest='height', type=int, default = 480, help='Height of the frames in the video stream.')
-	parser.add_argument('-num-w', '--num-workers', dest='num_workers', type=int, default = 2, help='Number of workers.')
-	parser.add_argument('-q-size', '--queue-size', dest='queue_size', type=int, default = 5, help='Size of the queue.')
+	parser.add_argument('-src', '--source', dest = 'video_source', type=int, default = 0, help = 'Device index of the camera.')
+	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 640, help = 'Width of the frames in the video stream.')
+	parser.add_argument('-ht', '--height', dest = 'height', type = int, default = 480, help = 'Height of the frames in the video stream.')
+	parser.add_argument('-num-w', '--num-workers', dest = 'num_workers', type = int, default = 2, help = 'Number of workers.')
+	parser.add_argument('-q-size', '--queue-size', dest = 'queue_size', type = int, default = 5, help = 'Size of the queue.')
 	args = parser.parse_args()
 
 	logger = multiprocessing.log_to_stderr()
 	logger.setLevel(multiprocessing.SUBDEBUG)
-
 	input_q = Queue(maxsize = args.queue_size)
 	output_q = Queue(maxsize = args.queue_size)
 	pool = Pool(args.num_workers, worker, (input_q, output_q))
@@ -108,6 +117,7 @@ if __name__ == '__main__':
 
 	# fps._numFrames < 120
 	while True:
+		# Frame is a numpy nd array
 		frame = video_capture.read()
 		input_q.put(frame)
 		t = time.time()
@@ -115,7 +125,7 @@ if __name__ == '__main__':
 		cv2.imshow('Video', output_rgb)
 		fps.update()
 		print('[INFO] elapsed time: {:.2f}'.format(time.time() - t))
-		if cv2.waitKey(1) & 0xFF == ord('q'):
+		if (cv2.waitKey(1) & 0xFF == ord('q')):
 			break
 
 	fps.stop()
