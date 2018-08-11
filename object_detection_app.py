@@ -5,8 +5,12 @@ An excersise in the usage of tensor flow, and more advanced python libraries.
 
 2018/08/10
 author: @Henri De Boever
-"""
 
+"Speed/accuracy trade-offs for modern convolutional object detectors."
+Huang J, Rathod V, Sun C, Zhu M, Korattikara A, Fathi A, Fischer I, Wojna Z,
+Song Y, Guadarrama S, Murphy K, CVPR 2017
+
+"""
 
 
 import os, cv2, time, argparse, multiprocessing
@@ -62,7 +66,6 @@ def detect_objects(image_np, sess, detection_graph):
 		line_thickness = 5)
 	return image_np
 
-
 def worker(input_q, output_q):
 	# Load a (frozen) Tensorflow model into memory.
 	detection_graph = tf.Graph()
@@ -84,7 +87,6 @@ def worker(input_q, output_q):
 
 	fps.stop()
 	sess.close()
-
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
