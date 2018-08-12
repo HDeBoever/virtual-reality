@@ -29,4 +29,4 @@ pytest -vs utils/
 ## Copyright
 
 See [LICENSE](LICENSE) for details.
-Copyright (c) 2017 [Dat Tran](http://www.dat-tran.com/) [Henri De Boever].
+Copyright (c) 2018 Henri De Boever
