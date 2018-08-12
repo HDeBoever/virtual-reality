@@ -7,10 +7,10 @@ A real-time object recognition application using [Google's TensorFlow Object Det
 2. `python object_detection_app.py`
     Optional arguments (default value):
     * Device index of the camera `--source=0`
-    * Width of the frames in the video stream `--width=640`
-    * Height of the frames in the video stream `--height=480`
-    * Number of workers `--num-workers=2`
-    * Size of the queue `--queue-size=5`
+    * Width of the frames in the video stream `--width = 1024`
+    * Height of the frames in the video stream `--height = 720`
+    * Number of workers `--num-workers = 1`
+    * Size of the queue `--queue-size = 50`
 
 ## Tests
 ```
@@ -18,7 +18,7 @@ pytest -vs utils/
 ```
 
 ## Requirements
-- [Anaconda / Python 3.5](https://www.continuum.io/downloads)
+- [Anaconda / Python 3.6](https://www.continuum.io/downloads)
 - [TensorFlow 1.2](https://www.tensorflow.org/)
 - [OpenCV 3.0](http://opencv.org/)
 
