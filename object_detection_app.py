@@ -1,6 +1,7 @@
 """
 An experimentation script to detect objects in real time using the webcam.
 An excersise in the usage of tensor flow, and more advanced python libraries.
+Working with Windows 10 and Anacaonda 3.5
 
 2018/08/10
 author: @Henri De Boever
@@ -41,7 +42,7 @@ def detect_objects(image_np, sess, detection_graph):
 	# Each box represents a part of the image where a particular object was detected.
 	boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
 
-	# Each score represent how level of confidence for each of the objects.
+	# Each score represent the level of confidence for each of the objects.
 	# Score is shown on the result image, together with the class label.
 	scores = detection_graph.get_tensor_by_name('detection_scores:0')
 	classes = detection_graph.get_tensor_by_name('detection_classes:0')
@@ -60,17 +61,37 @@ def detect_objects(image_np, sess, detection_graph):
 		use_normalized_coordinates = True,
 		line_thickness = 5)
 
-	#print(category_index)
-	print(np.squeeze(classes).astype(np.int32)[0])
-
-	# Get the indices of the top 3 things being tracked
+	print(np.squeeze(classes).astype(np.int32))
+	print(np.squeeze(scores))
+	# Get the indices of the top 3 things being recognized
 	object_index1 = np.squeeze(classes).astype(np.int32)[0]
 	object_index2 = np.squeeze(classes).astype(np.int32)[1]
 	object_index3 = np.squeeze(classes).astype(np.int32)[2]
 
+	# print(object_index1)
+	# print(object_index2)
+	# print(object_index3)
+
+	# Get probability scores of the top 3 items being tracked
+	object_score1 = np.squeeze(scores)[0]
+	object_score2 = np.squeeze(scores)[1]
+	object_score3 = np.squeeze(scores)[2]
+
+	# print(object_score1)
+	# print(object_score2)
+	# print(object_score3)
+
 	for key, item in category_index.items():
-		if(key == object_index1 or key == object_index2 or key == object_index3):
-			print(key, item['name'])
+		if (key == object_index1 and object_score1 > 0.2):
+			print(key, item['name'], object_score1)
+		elif (key == object_index2 and object_score2 > 0.2):
+			print(key, item['name'], object_score2)
+		elif (key == object_index3 and object_score3 > 0.2):
+			print(key, item['name'], object_score3)
+
+	# The possible objects dict
+	print(category_index)
+
 	return image_np
 
 def worker(input_q, output_q):
@@ -90,8 +111,6 @@ def worker(input_q, output_q):
 		fps.update()
 		frame = input_q.get()
 		frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-		print(dir(detection_graph))
-		print(detection_graph.get_tensor_by_name)
 		output_q.put(detect_objects(frame_rgb, sess, detection_graph))
 
 	fps.stop()
@@ -116,7 +135,9 @@ if __name__ == '__main__':
 	fps = FPS().start()
 
 	# fps._numFrames < 120
+	frame_number = 0
 	while True:
+		frame_number += 1
 		# Frame is a numpy nd array
 		frame = video_capture.read()
 		input_q.put(frame)
@@ -124,7 +145,7 @@ if __name__ == '__main__':
 		output_rgb = cv2.cvtColor(output_q.get(), cv2.COLOR_RGB2BGR)
 		cv2.imshow('Video', output_rgb)
 		fps.update()
-		print('[INFO] elapsed time: {:.2f}'.format(time.time() - t))
+		print("[INFO] elapsed time: {0:.2f}\nFrame number: {1}-------------------------------".format((time.time() - t), frame_number))
 		if (cv2.waitKey(1) & 0xFF == ord('q')):
 			break
 
