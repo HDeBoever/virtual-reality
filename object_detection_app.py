@@ -65,6 +65,7 @@ def detect_objects(image_np, sess, detection_graph):
 	# ----- For printing to the console during execution frames -----
 	# Zip the object index with it's associated percentage prediction if the prediction is greater than 0.5
 	classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), [item for item in np.squeeze(scores).tolist() if item > 0.5]))
+	print(classes_with_predictions)
 
 	# For each item in the reduced list, find its name in the category_index dictionary, and output it to the console
 	for object_tuple in classes_with_predictions:
@@ -73,8 +74,6 @@ def detect_objects(image_np, sess, detection_graph):
 				print(item['name'], object_tuple[1])
 				# Break once it is found to stop needless searching
 				break
-	print(classes_with_predictions)
-	# print(category_index)
 	return image_np
 
 def worker(input_q, output_q):
