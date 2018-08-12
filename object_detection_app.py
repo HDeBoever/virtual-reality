@@ -59,14 +59,15 @@ def detect_objects(image_np, sess, detection_graph):
 		np.squeeze(scores),
 		category_index,
 		use_normalized_coordinates = True,
-		line_thickness = 5)
+		line_thickness = 4)
 
-	# Zip the object index with it's associated percentage prediction
-	classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), np.squeeze(scores).tolist()))
-	# Keep the objectsin the list if the prediction is greater than 50%
-	reduced_objects_list = [item for item in classes_with_predictions if item[1] > 0.5]
+	# Zip the object index with it's associated percentage prediction if the prediction is greater than 0.5
+	scores_above_50 = [item for item in np.squeeze(scores).tolist() if item > 0.5]
+	classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), scores_above_50))
+
+	print(classes_with_predictions)
 	# For each item in the reduced list, find its name in the category_index dictionary, and output it to the console
-	for index, object_tuple in enumerate(reduced_objects_list):
+	for index, object_tuple in enumerate(classes_with_predictions):
 		for key, item in category_index.items():
 			if (key == object_tuple[0]):
 				print(item['name'], object_tuple[1])
@@ -98,6 +99,7 @@ def worker(input_q, output_q):
 
 if __name__ == '__main__':
 
+	print("\n----------Beginning object detection app----------\n")
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-src', '--source', dest = 'video_source', type=int, default = 0, help = 'Device index of the camera.')
 	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 640, help = 'Width of the frames in the video stream.')
