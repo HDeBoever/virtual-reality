@@ -2,6 +2,7 @@
 An experimentation script to detect objects in real time using the webcam.
 An excersise in the usage of tensor flow, and more advanced python libraries.
 The current distro of the code works on Windows 10 and Anacaonda 3.5
+Based on source code provided by Dat Tran
 
 2018/08/10
 author: @Henri De Boever
@@ -61,12 +62,12 @@ def detect_objects(image_np, sess, detection_graph):
 		use_normalized_coordinates = True,
 		line_thickness = 4)
 
+	# ----- For printing to the console during execution frames -----
 	# Zip the object index with it's associated percentage prediction if the prediction is greater than 0.5
-	scores_above_50 = [item for item in np.squeeze(scores).tolist() if item > 0.5]
-	classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), scores_above_50))
+	classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), [item for item in np.squeeze(scores).tolist() if item > 0.5]))
 
 	# For each item in the reduced list, find its name in the category_index dictionary, and output it to the console
-	for index, object_tuple in enumerate(classes_with_predictions):
+	for object_tuple in classes_with_predictions:
 		for key, item in category_index.items():
 			if (key == object_tuple[0]):
 				print(item['name'], object_tuple[1])
