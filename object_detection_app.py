@@ -61,37 +61,17 @@ def detect_objects(image_np, sess, detection_graph):
 		use_normalized_coordinates = True,
 		line_thickness = 5)
 
-	print(np.squeeze(classes).astype(np.int32))
-	print(np.squeeze(scores))
-	# Get the indices of the top 3 things being recognized
-	object_index1 = np.squeeze(classes).astype(np.int32)[0]
-	object_index2 = np.squeeze(classes).astype(np.int32)[1]
-	object_index3 = np.squeeze(classes).astype(np.int32)[2]
-
-	# print(object_index1)
-	# print(object_index2)
-	# print(object_index3)
-
-	# Get probability scores of the top 3 items being tracked
-	object_score1 = np.squeeze(scores)[0]
-	object_score2 = np.squeeze(scores)[1]
-	object_score3 = np.squeeze(scores)[2]
-
-	# print(object_score1)
-	# print(object_score2)
-	# print(object_score3)
-
-	for key, item in category_index.items():
-		if (key == object_index1 and object_score1 > 0.2):
-			print(key, item['name'], object_score1)
-		elif (key == object_index2 and object_score2 > 0.2):
-			print(key, item['name'], object_score2)
-		elif (key == object_index3 and object_score3 > 0.2):
-			print(key, item['name'], object_score3)
-
-	# The possible objects dict
-	print(category_index)
-
+	# Zip the object index with it's associated percentage prediction
+	classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), np.squeeze(scores).tolist()))
+	# Keep the objectsin the list if the prediction is greater than 50%
+	reduced_objects_list = [item for item in classes_with_predictions if item[1] > 0.5]
+	# For each item in the reduced list, find its name in the category_index dictionary, and output it to the console
+	for index, object_tuple in enumerate(reduced_objects_list):
+		for key, item in category_index.items():
+			if (key == object_tuple[0]):
+				print(item['name'], object_tuple[1])
+				# Break once it is found to stop needless searching
+				break
 	return image_np
 
 def worker(input_q, output_q):
