@@ -102,11 +102,14 @@ class ObjectDetector():
 		fps.stop()
 		sess.close()
 
-if __name__ == '__main__':
+def main(argv):
 
 	print("\n---------- Starting object detection ----------\n")
 
+	# Instantiate an ObjectDetector class object
 	detector = ObjectDetector()
+
+	# Initialize a parser object
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-src', '--source', dest = 'video_source', type=int, default = 0, help = 'Device index of the camera.')
 	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 1024, help = 'Width of the frames in the video stream.')
@@ -115,14 +118,16 @@ if __name__ == '__main__':
 	parser.add_argument('-q-size', '--queue-size', dest = 'queue_size', type = int, default = 50, help = 'Size of the queue.')
 	args = parser.parse_args()
 
+	# Initialize a logger object
 	logger = multiprocessing.log_to_stderr()
 	logger.setLevel(multiprocessing.SUBDEBUG)
 	input_q = Queue(maxsize = args.queue_size)
 	output_q = Queue(maxsize = args.queue_size)
 	pool = Pool(args.num_workers, detector.worker, (input_q, output_q))
 	video_capture = WebcamVideoStream(src = args.video_source, width = args.width, height = args.height).start()
-	fps = FPS().start()
 
+	# ------------------------------Control Loop ------------------------------
+	fps = FPS().start()
 	# fps._numFrames < 120
 	frame_number = 0
 	while True:
@@ -137,11 +142,12 @@ if __name__ == '__main__':
 		print("[INFO] elapsed time: {0:.3f}\nFrame number: {1}-------------------------------".format((time.time() - t), frame_number))
 		if (cv2.waitKey(1) & 0xFF == ord('q')):
 			break
-
 	fps.stop()
 	print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
 	print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
-
 	pool.terminate()
 	video_capture.stop()
 	cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+	main(sys.argv)
