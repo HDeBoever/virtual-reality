@@ -19,88 +19,94 @@ from multiprocessing import Queue, Pool
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-CWD_PATH = os.getcwd()
+class ObjectDetector():
 
-# Path to frozen detection graph. This is the actual model that is used for the object detection.
-MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
-PATH_TO_CKPT = os.path.join(CWD_PATH, 'object_detection', MODEL_NAME, 'frozen_inference_graph.pb')
+	def __init__(self):
+		# Initialize Current Path
+		self.CWD_PATH = os.getcwd()
 
-# List of the strings that is used to add correct label for each box.
-PATH_TO_LABELS = os.path.join(CWD_PATH, 'object_detection', 'data', 'mscoco_label_map.pbtxt')
-NUM_CLASSES = 90
+		# Path to frozen detection graph. This is the actual model that is used for the object detection.
+		self.MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
+		self.PATH_TO_CKPT = os.path.join(self.CWD_PATH, 'object_detection', self.MODEL_NAME, 'frozen_inference_graph.pb')
 
-# Loading label map
-label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
-categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes = NUM_CLASSES, use_display_name = True)
-category_index = label_map_util.create_category_index(categories)
+		# List of the strings that is used to add correct label for each box.
+		self.PATH_TO_LABELS = os.path.join(self.CWD_PATH, 'object_detection', 'data', 'mscoco_label_map.pbtxt')
+		self.NUM_CLASSES = 90
 
-def detect_objects(image_np, sess, detection_graph):
+		# Loading label map
+		self.label_map = label_map_util.load_labelmap(self.PATH_TO_LABELS)
+		self.categories = label_map_util.convert_label_map_to_categories(self.label_map, max_num_classes = self.NUM_CLASSES, use_display_name = True)
+		self.category_index = label_map_util.create_category_index(self.categories)
 
-	# Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-	image_np_expanded = np.expand_dims(image_np, axis = 0)
-	image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
+	def detect_objects(self, image_np, sess, detection_graph):
 
-	# Each box represents a part of the image where a particular object was detected.
-	boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
+		# Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+		image_np_expanded = np.expand_dims(image_np, axis = 0)
+		image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
 
-	# Each score represent the level of confidence for each of the objects.
-	# Score is shown on the result image, together with the class label.
-	scores = detection_graph.get_tensor_by_name('detection_scores:0')
-	classes = detection_graph.get_tensor_by_name('detection_classes:0')
-	num_detections = detection_graph.get_tensor_by_name('num_detections:0')
+		# Each box represents a part of the image where a particular object was detected.
+		boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
 
-	# Actual detection
-	(boxes, scores, classes, num_detections) = sess.run([boxes, scores, classes, num_detections], feed_dict = {image_tensor: image_np_expanded})
+		# Each score represent the level of confidence for each of the objects.
+		# Score is shown on the result image, together with the class label.
+		scores = detection_graph.get_tensor_by_name('detection_scores:0')
+		classes = detection_graph.get_tensor_by_name('detection_classes:0')
+		num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-	# Visualization of the results of a detection.
-	vis_util.visualize_boxes_and_labels_on_image_array(
-		image_np,
-		np.squeeze(boxes),
-		np.squeeze(classes).astype(np.int32),
-		np.squeeze(scores),
-		category_index,
-		use_normalized_coordinates = True,
-		line_thickness = 4)
+		# Actual detection
+		(boxes, scores, classes, num_detections) = sess.run([boxes, scores, classes, num_detections], feed_dict = {image_tensor: image_np_expanded})
 
-	# ----- For printing to the console during execution frames -----
-	# Zip the object index with it's associated percentage prediction if the prediction is greater than 0.5
-	classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), [item for item in np.squeeze(scores).tolist() if item > 0.5]))
-	print(classes_with_predictions)
+		# Visualization of the results of a detection.
+		vis_util.visualize_boxes_and_labels_on_image_array(
+			image_np,
+			np.squeeze(boxes),
+			np.squeeze(classes).astype(np.int32),
+			np.squeeze(scores),
+			self.category_index,
+			use_normalized_coordinates = True,
+			line_thickness = 4)
 
-	# For each item in the reduced list, find its name in the category_index dictionary, and output it to the console
-	for object_tuple in classes_with_predictions:
-		for key, item in category_index.items():
-			if (key == object_tuple[0]):
-				print(item['name'], object_tuple[1])
-				# Break once it is found to stop needless searching
-				break
-	return image_np
+		# ----- For printing to the console during execution frames -----
+		# Zip the object index with it's associated percentage prediction if the prediction is greater than 0.5
+		classes_with_predictions = list(zip(np.squeeze(classes).astype(np.int32).tolist(), [item for item in np.squeeze(scores).tolist() if item > 0.5]))
+		print(classes_with_predictions)
 
-def worker(input_q, output_q):
-	# Load a (frozen) Tensorflow model into memory.
-	detection_graph = tf.Graph()
-	with detection_graph.as_default():
-		od_graph_def = tf.GraphDef()
-		with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
-			serialized_graph = fid.read()
-			od_graph_def.ParseFromString(serialized_graph)
-			tf.import_graph_def(od_graph_def, name='')
+		# For each item in the reduced list, find its name in the self.category_index dictionary, and output it to the console
+		for object_tuple in classes_with_predictions:
+			for key, item in self.category_index.items():
+				if (key == object_tuple[0]):
+					print(item['name'], object_tuple[1])
+					# Break once it is found to stop needless searching
+					break
+		return image_np
 
-		sess = tf.Session(graph = detection_graph)
+	def worker(self, input_q, output_q):
+		# Load a (frozen) Tensorflow model into memory.
+		detection_graph = tf.Graph()
+		with detection_graph.as_default():
+			od_graph_def = tf.GraphDef()
+			with tf.gfile.GFile(self.PATH_TO_CKPT, 'rb') as fid:
+				serialized_graph = fid.read()
+				od_graph_def.ParseFromString(serialized_graph)
+				tf.import_graph_def(od_graph_def, name='')
 
-	fps = FPS().start()
-	while True:
-		fps.update()
-		frame = input_q.get()
-		frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-		output_q.put(detect_objects(frame_rgb, sess, detection_graph))
+			sess = tf.Session(graph = detection_graph)
 
-	fps.stop()
-	sess.close()
+		fps = FPS().start()
+		while True:
+			fps.update()
+			frame = input_q.get()
+			frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+			output_q.put(self.detect_objects(frame_rgb, sess, detection_graph))
+
+		fps.stop()
+		sess.close()
 
 if __name__ == '__main__':
 
-	print("\n----------Beginning object detection app----------\n")
+	print("\n---------- Starting object detection ----------\n")
+
+	detector = ObjectDetector()
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-src', '--source', dest = 'video_source', type=int, default = 0, help = 'Device index of the camera.')
 	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 1024, help = 'Width of the frames in the video stream.')
@@ -113,7 +119,7 @@ if __name__ == '__main__':
 	logger.setLevel(multiprocessing.SUBDEBUG)
 	input_q = Queue(maxsize = args.queue_size)
 	output_q = Queue(maxsize = args.queue_size)
-	pool = Pool(args.num_workers, worker, (input_q, output_q))
+	pool = Pool(args.num_workers, detector.worker, (input_q, output_q))
 	video_capture = WebcamVideoStream(src = args.video_source, width = args.width, height = args.height).start()
 	fps = FPS().start()
 
@@ -128,7 +134,7 @@ if __name__ == '__main__':
 		output_rgb = cv2.cvtColor(output_q.get(), cv2.COLOR_RGB2BGR)
 		cv2.imshow('Video', output_rgb)
 		fps.update()
-		print("[INFO] elapsed time: {0:.2f}\nFrame number: {1}-------------------------------".format((time.time() - t), frame_number))
+		print("[INFO] elapsed time: {0:.3f}\nFrame number: {1}-------------------------------".format((time.time() - t), frame_number))
 		if (cv2.waitKey(1) & 0xFF == ord('q')):
 			break
 
