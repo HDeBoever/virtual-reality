@@ -21,13 +21,15 @@ from object_detection.utils import visualization_utils as vis_util
 
 class ObjectDetector():
 
-	def __init__(self):
+	def __init__(self, GRAPH_NAME):
+
 		# Initialize Current Path
 		self.CWD_PATH = os.getcwd()
 
 		# Path to frozen detection graph. This is the actual model that is used for the object detection.
-		self.MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
-		self.PATH_TO_CKPT = os.path.join(self.CWD_PATH, 'object_detection', self.MODEL_NAME, 'frozen_inference_graph.pb')
+		self.MODEL_DIR_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
+		self.GRAPH_NAME =  GRAPH_NAME
+		self.PATH_TO_CKPT = os.path.join(self.CWD_PATH, 'object_detection', self.MODEL_DIR_NAME, self.GRAPH_NAME)
 
 		# List of the strings that is used to add correct label for each box.
 		self.PATH_TO_LABELS = os.path.join(self.CWD_PATH, 'object_detection', 'data', 'mscoco_label_map.pbtxt')
@@ -81,8 +83,10 @@ class ObjectDetector():
 		return image_np
 
 	def worker(self, input_q, output_q):
+		print("Initialized a worker!")
 		# Load a (frozen) Tensorflow model into memory.
 		detection_graph = tf.Graph()
+		# print(dir(detection_graph))
 		with detection_graph.as_default():
 			od_graph_def = tf.GraphDef()
 			with tf.gfile.GFile(self.PATH_TO_CKPT, 'rb') as fid:
@@ -107,15 +111,16 @@ def main(argv):
 	print("\n---------- Starting object detection ----------\n")
 
 	# Instantiate an ObjectDetector class object
-	detector = ObjectDetector()
+	# Takes the name of the model graph as an argument
+	ObjectFinder = ObjectDetector('frozen_inference_graph.pb')
 
 	# Initialize a parser object
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-src', '--source', dest = 'video_source', type=int, default = 0, help = 'Device index of the camera.')
-	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 1024, help = 'Width of the frames in the video stream.')
+	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 1080, help = 'Width of the frames in the video stream.')
 	parser.add_argument('-ht', '--height', dest = 'height', type = int, default = 720, help = 'Height of the frames in the video stream.')
-	parser.add_argument('-num-w', '--num-workers', dest = 'num_workers', type = int, default = 1, help = 'Number of workers.')
-	parser.add_argument('-q-size', '--queue-size', dest = 'queue_size', type = int, default = 50, help = 'Size of the queue.')
+	parser.add_argument('-num-w', '--num-workers', dest = 'num_workers', type = int, default = 4, help = 'Number of workers.')
+	parser.add_argument('-q-size', '--queue-size', dest = 'queue_size', type = int, default = 25, help = 'Size of the queue.')
 	args = parser.parse_args()
 
 	# Initialize a logger object
@@ -123,7 +128,7 @@ def main(argv):
 	logger.setLevel(multiprocessing.SUBDEBUG)
 	input_q = Queue(maxsize = args.queue_size)
 	output_q = Queue(maxsize = args.queue_size)
-	pool = Pool(args.num_workers, detector.worker, (input_q, output_q))
+	pool = Pool(args.num_workers, ObjectFinder.worker, (input_q, output_q))
 	video_capture = WebcamVideoStream(src = args.video_source, width = args.width, height = args.height).start()
 
 	# ------------------------------Control Loop ------------------------------

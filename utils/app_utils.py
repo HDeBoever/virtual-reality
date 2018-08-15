@@ -190,4 +190,5 @@ def draw_boxes_and_labels(
 		rect_points.append(dict(ymin=ymin, xmin=xmin, ymax=ymax, xmax=xmax))
 		class_names.append(box_to_display_str_map[box])
 		class_colors.append(color_rgb[color.lower()])
+	print(class_names, class_colors)
 	return rect_points, class_names, class_colors
