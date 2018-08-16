@@ -21,17 +21,17 @@ from object_detection.utils import visualization_utils as vis_util
 
 class ObjectDetector():
 
-	def __init__(self, GRAPH_NAME):
+	def __init__(self, MODEL):
 
 		# Initialize Current Path
 		self.CWD_PATH = os.getcwd()
 
 		# Path to frozen detection graph. This is the actual model that is used for the object detection.
 		self.MODEL_DIR_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
-		self.GRAPH_NAME =  GRAPH_NAME
-		self.PATH_TO_CKPT = os.path.join(self.CWD_PATH, 'object_detection', self.MODEL_DIR_NAME, self.GRAPH_NAME)
+		self.MODEL =  MODEL
+		self.PATH_TO_CKPT = os.path.join(self.CWD_PATH, 'object_detection', self.MODEL_DIR_NAME, self.MODEL)
 
-		# List of the strings that is used to add correct label for each box.
+		# List of the strings that is used to add the correct label for each box.
 		self.PATH_TO_LABELS = os.path.join(self.CWD_PATH, 'object_detection', 'data', 'mscoco_label_map.pbtxt')
 		self.NUM_CLASSES = 90
 
@@ -119,7 +119,7 @@ def main(argv):
 	parser.add_argument('-src', '--source', dest = 'video_source', type=int, default = 0, help = 'Device index of the camera.')
 	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 1080, help = 'Width of the frames in the video stream.')
 	parser.add_argument('-ht', '--height', dest = 'height', type = int, default = 720, help = 'Height of the frames in the video stream.')
-	parser.add_argument('-num-w', '--num-workers', dest = 'num_workers', type = int, default = 4, help = 'Number of workers.')
+	parser.add_argument('-num-w', '--num-workers', dest = 'num_workers', type = int, default = 1, help = 'Number of workers.')
 	parser.add_argument('-q-size', '--queue-size', dest = 'queue_size', type = int, default = 25, help = 'Size of the queue.')
 	args = parser.parse_args()
 
