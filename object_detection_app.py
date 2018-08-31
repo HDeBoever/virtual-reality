@@ -119,7 +119,7 @@ def main(argv):
 	parser.add_argument('-src', '--source', dest = 'video_source', type=int, default = 0, help = 'Device index of the camera.')
 	parser.add_argument('-wd', '--width', dest = 'width', type = int, default = 1080, help = 'Width of the frames in the video stream.')
 	parser.add_argument('-ht', '--height', dest = 'height', type = int, default = 720, help = 'Height of the frames in the video stream.')
-	parser.add_argument('-num-w', '--num-workers', dest = 'num_workers', type = int, default = 1, help = 'Number of workers.')
+	parser.add_argument('-num-w', '--num-workers', dest = 'num_workers', type = int, default = 4, help = 'Number of workers.')
 	parser.add_argument('-q-size', '--queue-size', dest = 'queue_size', type = int, default = 25, help = 'Size of the queue.')
 	args = parser.parse_args()
 
